@@ -16,9 +16,7 @@ const BACKWARDS = -1;
  */
 export class Motor extends EventEmitter   {
 
-  /** ------------------------------
-   * Constructor
-   */
+  /* ------------------------------ */
   constructor({ id, board, stepPin, dirPin, limitPin, encoderPinA, encoderPinB, limPos, limNeg, stepDeg }) {
 
     logger(`creating motor ${id}`);
@@ -50,9 +48,7 @@ export class Motor extends EventEmitter   {
     this.stepPosition = 0;                      // step position
   }
 
-  /** ------------------------------
-   * Start
-   */
+  /* ------------------------------ */
   start() {
 
     logger(`starting motor ${this.id}`);
@@ -98,9 +94,7 @@ export class Motor extends EventEmitter   {
     this.emit('ready', this.id);
   }
 
-  /** ------------------------------
-   * goHome
-   */
+  /* ------------------------------ */
   goHome(){
 
     logger(`motor ${this.id} starting to home`);
@@ -134,9 +128,7 @@ export class Motor extends EventEmitter   {
 
   }
 
-  /** ------------------------------
-   * Set Position
-   */
+  /* ------------------------------ */
   get state(){
     return {
       homing: this.homing,
@@ -149,9 +141,7 @@ export class Motor extends EventEmitter   {
     }
   }
 
-  /** ------------------------------
-   * Set Position
-   */
+  /* ------------------------------ */
   setPosition( position, speed = 500 ){
 
     logger(`motor ${this.id} set position to ${position} speed ${speed}`);
@@ -172,18 +162,21 @@ export class Motor extends EventEmitter   {
     });
   }
 
+  /* ------------------------------ */
   enable(){
     logger(`enable ${this.id}`);
     this.board.io.accelStepperEnable(this.id, ENABLED);
     this.emit('enabled');
   }
 
+  /* ------------------------------ */
   disable(){
     logger(`disable ${this.id}`);
     this.board.io.accelStepperEnable(this.id, DISABLED);
     this.emit('disabled');
   }
 
+  /* ------------------------------ */
   resetErrors(){
     this.error = undefined;
     this.emit('resetErrors');
