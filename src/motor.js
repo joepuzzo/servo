@@ -21,7 +21,7 @@ export class Motor extends EventEmitter   {
    */
   constructor({ id, board, stepPin, dirPin, limitPin, encoderPinA, encoderPinB, limPos, limNeg, stepDeg }) {
 
-    logger(`creating motor with id ${id}`);
+    logger(`creating motor ${id}`);
 
     // Becasuse we are event emitter
     super();
@@ -39,20 +39,23 @@ export class Motor extends EventEmitter   {
     this.stepDeg = stepDeg;                     // motor steps per degree
     this.axisLimit = limPos + limNeg;           // define total axis travel
     this.stepLimit = this.axisLimit * stepDeg;  // steps full movement of axis
-    this.enabled = true;                        // will enable/disable motor
+    this.zeroStep = this.limNeg * stepDeg;      // steps from 0 --- to ---> axis zero
+    this.enabled = false;                       // will enable/disable motor
     this.error = undefined;                     // current error state for this motor
     this.robotStopped = false;                  // the motor might stop things but the robot might also have stop set
     this.homing = false;                        // if motor is process of homing
     this.home = false;                          // if the motor is currently home
-
-    // Start up
-    this.start();
+    this.ready = false;                         // if motor is ready
+    this.encoderPosition = 0;                   // encoder position
+    this.stepPosition = 0;                      // step position
   }
 
   /** ------------------------------
    * Start
    */
   start() {
+
+    logger(`starting motor ${this.id}`);
 
     // Configure stepper motor
     this.board.io.accelStepperConfig({
@@ -90,14 +93,17 @@ export class Motor extends EventEmitter   {
     });
 
     // We are ready
-    logger(`motor with id ${this.id} is ready`);
-    this.emit('ready');
+    logger(`motor ${this.id} is ready`);
+    this.ready = true;
+    this.emit('ready', this.id);
   }
 
   /** ------------------------------
-   * Home
+   * goHome
    */
-  home(){
+  goHome(){
+
+    logger(`motor ${this.id} starting to home`);
 
     // We are now in homing state
     this.homing = true;
@@ -109,10 +115,8 @@ export class Motor extends EventEmitter   {
       this.board.io.accelStepperZero(0);
       this.homing = false;
       this.home = true;
-      this.emit('home');
+      this.emit('home', this.id);
     })
-
-    logger(`motor ${this.id} starting to home`);
 
     // Slow for homing
     this.board.io.accelStepperSpeed(this.id, 500);
@@ -120,6 +124,12 @@ export class Motor extends EventEmitter   {
     // We go back until we find switch
     this.board.io.accelStepperStep(this.id, 4000 * BACKWARDS,()=>{
       logger(`motor ${this.id} homing movement complete!`);
+
+      // If we are here we never found home :(
+      if(!this.home){
+        this.error = 'NOHOME';
+        this.emit('nohome', this.id);
+      }
     });
 
   }
@@ -127,7 +137,24 @@ export class Motor extends EventEmitter   {
   /** ------------------------------
    * Set Position
    */
+  get state(){
+    return {
+      homing: this.homing,
+      home: this.home,
+      enabled: this.enabled,
+      ready: this.ready, 
+      stepPosition: this.stepPosition,
+      encoderPosition: this.encoderPosition,
+      error: this.error
+    }
+  }
+
+  /** ------------------------------
+   * Set Position
+   */
   setPosition( position, speed = 500 ){
+
+    logger(`motor ${this.id} set position to ${position} speed ${speed}`);
 
     // set speed before movement
     this.board.io.accelStepperSpeed(this.id, speed);
@@ -135,11 +162,31 @@ export class Motor extends EventEmitter   {
     // convert pos to steps 
     const pos = this.stepDeg * position;
 
+    // update our step pos
+    this.stepPosition = pos;
+
     // Move to specified position
     this.board.io.accelStepperTo(this.id, pos, ()=>{
       logger(`motor ${this.id} movement complete`);
+      this.emit('moved');
     });
   }
 
+  enable(){
+    logger(`enable ${this.id}`);
+    this.board.io.accelStepperEnable(this.id, ENABLED);
+    this.emit('enabled');
+  }
+
+  disable(){
+    logger(`disable ${this.id}`);
+    this.board.io.accelStepperEnable(this.id, DISABLED);
+    this.emit('disabled');
+  }
+
+  resetErrors(){
+    this.error = undefined;
+    this.emit('resetErrors');
+  }
 
 }

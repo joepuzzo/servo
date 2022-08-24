@@ -13,26 +13,11 @@ export const startServer = (config) => {
   logger("created socket", connectionString);
 
   // Create robot
-  const robot = new Robot({ id: config.id });
+  const robot = new Robot(config);
 
   /* ---------- Subscribe to robot events ---------- */
-  robot.on('ready', () => {
-    logger("robot is ready sending state", robot.state);
-    socket.emit('state', robot.state );
-  });
-
-  robot.on('homing', () => {
-    logger("robot is homing sending state", robot.state);
-    socket.emit('state', robot.state );
-  });
-
-  robot.on('home', () => {
-    logger("robot is home sending state", robot.state);
-    socket.emit('state', robot.state );
-  });
-
   robot.on('state', () => {
-    logger("sending state", robot.state);
+    logger("sending state");
     socket.emit('state', robot.state );
   });
 
@@ -40,8 +25,8 @@ export const startServer = (config) => {
   /* ---------- Subscribe to socket events ---------- */
 
   socket.on('connect', ()=>{
-    logger("robot is connected to controller, sending state", robot.state);
-    socket.emit('meta', robot.meta);
+    logger("robot is connected to controller, sending state");
+    socket.emit('register', robot.meta);
     socket.emit('state', robot.state );
   });
 
@@ -49,19 +34,29 @@ export const startServer = (config) => {
     logger("controller says hello");
   });
 
-  socket.on('setMotorPos', (id, pos) => {
-    logger(`controller says setMotorPos to ${pos} for motor ${id}`);
-    robot.setMotorPosition(id, pos);
+  socket.on('motorSetPos', (id, pos, speed) => {
+    logger(`controller says motorSetPos to ${pos} at speed ${speed} for motor ${id}`);
+    robot.motorSetPosition(id, pos, speed);
   });
 
-  socket.on('resetErrors', (id) => {
-    logger(`controller says resetErrors for motor ${id}`);
-    robot.resetErrors(id);
+  socket.on('motorResetErrors', (id) => {
+    logger(`controller says motorResetErrors for motor ${id}`);
+    robot.motorResetErrors(id);
   });
 
-  socket.on('enableMotor', (id) => {
-    logger(`controller says enableMotor ${id}`);
-    robot.enableMotor(id);
+  socket.on('motorEnable', (id) => {
+    logger(`controller says motorEnable ${id}`);
+    robot.motorEnable(id);
+  });
+
+  socket.on('motorHome', (id) => {
+    logger(`controller says motorHome ${id}`);
+    robot.motorHome(id);
+  });
+
+  socket.on('robotHome', () => {
+    logger(`controller says robotHome`);
+    robot.robotHome();
   });
 
   socket.on('home', () => {

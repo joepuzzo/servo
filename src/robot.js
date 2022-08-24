@@ -2,6 +2,7 @@
 import {EventEmitter} from 'events';
 import { Motor } from './motor.js';
 import five from "johnny-five";
+import { mockBoard } from "./mockboard.js";
 
 // For debugging
 import { Debug } from './debug.js';
@@ -15,7 +16,7 @@ export class Robot extends EventEmitter   {
   /** ------------------------------
    * Constructor
    */
-  constructor({ id }) {
+  constructor({ id, mock }) {
 
     logger(`creating robot with id ${id}`);
 
@@ -27,22 +28,28 @@ export class Robot extends EventEmitter   {
     this.stopped = false;             // will disable the robot
     this.ready = false;               // if the robot is ready
     this.homing = false;              // if the robot is currently homing
-    this.board = new five.Board({     // Jhonny5 board 
-      repl: false
-    });
+    this.home = false;                // if the robot is currently home
+    this.mock = mock;                 // if we are in mock mode ( no actual arduino connected )
+
+    this.board = mock                 // Jhonny5 board 
+      ? mockBoard()
+      : new five.Board({
+        repl: false
+      });
+
     this.motors = {};                 // tracks all motors by joint id
     
     // Start up the robot when board is ready
-    this.board.on("ready", this.setup );
+    this.board.on("ready", () => this.setup() );
 
-    // Start up
-    this.start();
   }
 
   /** ------------------------------
    * setup
    */
    setup() {
+
+     logger(`starting robot with id ${this.id}`);
 
       // temp var to pass to motors
       const board = this.board;
@@ -55,7 +62,126 @@ export class Robot extends EventEmitter   {
       this.motors.j4 = new Motor({ id: 'j4', board, stepPin: 8, dirPin: 9, limitPin: 30, encoderPinA: 23, encoderPinB: 22, limPos: 105, limNeg: 105, stepDeg: 21.86024888 });
       this.motors.j5 = new Motor({ id: 'j5', board, stepPin: 10, dirPin: 11, limitPin: 31, encoderPinA: 24, encoderPinB: 25, limPos: 155, limNeg: 155, stepDeg: 22.22222222 });
 
+      // Subscribe to events for all motors
+      Object.values(this.motors).forEach(motor => {
+        motor.on('ready', (id) => this.motorReady(id) );
+        motor.on('homing', () => this.robotState() );
+        motor.on('home', () => this.motorHomed() );
+        motor.on('nohome', () => this.robotState() );
+        motor.on('moved', () => this.robotState() );
+        motor.on('disabled', () => this.robotState() );
+        motor.on('enabled', () => this.robotState() );
+        motor.on('resetErrors', () => this.robotState() );
+      });
+
+      // Start all motors
+      Object.values(this.motors).forEach(motor => {
+        motor.start();
+      });      
+
    }
+
+  /** ------------------------------
+   * get state
+   */
+  get state(){
+
+    // Build motors state object
+    const motors = {};
+    Object.values(this.motors).forEach( motor => {
+      motors[motor.id] = motor.state;
+    });
+
+    // return state
+    return {
+      id: this.id,
+      motors
+    }
+  }
+
+
+  /** ------------------------------
+   * get meta
+   */
+   get meta(){
+
+    // Build motors state object
+    const motors = {};
+    Object.values(this.motors).forEach( motor => {
+      motors[motor.id] = { id: motor.id };
+    });
+
+    // return meta
+    return {
+      motors
+    }
+  }
+
+   /* -------------------- Motor Events -------------------- */
+
+  motorReady(id){
+    logger(`motor ${id} is ready`);
+    if(Object.values(this.motors).every( motor => motor.ready)){
+      logger(`all motors are ready!`);
+      this.ready = true;
+      this.emit('state');
+    }
+  }
+
+  motorHomed(id){
+    logger(`motor ${id} is homed`);
+
+    // If we are homing robot check to see if we are all done homing
+    if(this.homing){
+      if(Object.values(this.motors).every( motor => motor.home)){
+        logger(`all motors are home!`);
+        this.home = true;
+        this.emit('state');
+      }
+    }
+  }
+
+  robotState(){
+    this.emit('state');
+  }
+
+  /* -------------------- Robot Actions -------------------- */
+
+  robotHome(){
+    logger(`home robot`);
+
+    // Update our state
+    this.homing = true;
+
+    // Home all motors
+    Object.values(this.motors).forEach(motor => {
+      motor.goHome();
+    });     
+    
+  }
+
+
+  /* -------------------- Motor Actions -------------------- */
+
+  motorSetPosition(id, pos, speed){
+    logger(`set position for motor ${id}`);
+    this.motors[id].setPosition(pos, speed);
+  }
+
+  motorHome(id){
+    logger(`home motor ${id}`);
+    this.motors[id].goHome();
+  }
+
+  motorResetErrors(id){
+    logger(`reset motor errors for motor ${id}`);
+    this.motors[id].resetErrors();
+  }
+
+  motorEnable(id){
+    logger(`enable motor ${id}`);
+    this.motors[id].enable();
+  }
 
 
 }
