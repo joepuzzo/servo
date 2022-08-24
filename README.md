@@ -1,5 +1,5 @@
 # Getting Started 
 
 ```bas
-DEBUG='igus:.*' node index.js -p 3000 
+DEBUG='servo:.*' node index.js -p 3000 
 ```

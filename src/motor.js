@@ -3,7 +3,7 @@ import five from "johnny-five";
 
 // For debugging
 import { Debug } from './debug.js';
-const logger = Debug('igus:motor' + '\t');
+const logger = Debug('servo:motor' + '\t');
 
 // Constatnts
 const ENABLED = true;
