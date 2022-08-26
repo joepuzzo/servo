@@ -21,6 +21,11 @@ export const startServer = (config) => {
     socket.emit('state', robot.state );
   });
 
+  robot.on('ready', () => {
+    logger("robot ready sending state and registering");
+    socket.emit('register', robot.meta);
+    socket.emit('state', robot.state );  
+  });
 
   /* ---------- Subscribe to socket events ---------- */
 
@@ -49,9 +54,19 @@ export const startServer = (config) => {
     robot.motorEnable(id);
   });
 
+  socket.on('motorDisable', (id) => {
+    logger(`controller says motorDisable ${id}`);
+    robot.motorDisable(id);
+  });
+
   socket.on('motorHome', (id) => {
     logger(`controller says motorHome ${id}`);
     robot.motorHome(id);
+  });
+
+  socket.on('motorZero', (id) => {
+    logger(`controller says motorZero ${id}`);
+    robot.motorZero(id);
   });
 
   socket.on('robotHome', () => {

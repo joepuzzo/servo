@@ -6,7 +6,7 @@ import { Debug } from './debug.js';
 const logger = Debug('servo:motor' + '\t');
 
 // Constatnts
-const ENABLED = true;
+const ENABLED = false;
 const DISABLED = !ENABLED;
 const FORWARDS = 1;
 const BACKWARDS = -1;
@@ -17,7 +17,7 @@ const BACKWARDS = -1;
 export class Motor extends EventEmitter   {
 
   /* ------------------------------ */
-  constructor({ id, board, stepPin, dirPin, limitPin, encoderPinA, encoderPinB, limPos, limNeg, stepDeg }) {
+  constructor({ id, stepper, board, stepPin, dirPin, limitPin, encoderPinA, encoderPinB, limPos, limNeg, stepDeg }) {
 
     logger(`creating motor ${id}`);
 
@@ -26,6 +26,7 @@ export class Motor extends EventEmitter   {
 
     // Define parameters
     this.id = id;                               // id of the motor
+    this.stepper = stepper;                     // stepper id for this motor
     this.board = board;                         // the io board ( arduino )
     this.stepPin = stepPin;                     // the step pin on the arduino
     this.dirPin = dirPin;                       // the dir pin on the arduino
@@ -55,16 +56,16 @@ export class Motor extends EventEmitter   {
 
     // Configure stepper motor
     this.board.io.accelStepperConfig({
-      deviceNum: this.id,
+      deviceNum: this.stepper,
       type: this.board.io.STEPPER.TYPE.DRIVER,
       stepPin: this.stepPin,
       directionPin: this.dirPin,
-      enablePin: 1, // TODO define this
+      enablePin: 12, // TODO define this
     });
 
     // Enable stepper motor
     this.enabled = true;
-    this.board.io.accelStepperEnable(this.id, ENABLED);
+    this.board.io.accelStepperEnable(this.stepper, ENABLED);
 
     // Configure limit switch
     this.limit = new five.Button({
@@ -79,12 +80,13 @@ export class Motor extends EventEmitter   {
       if( !this.homing ){
         logger(`Error: limit hit for motor ${this.id}`);
         this.error = 'LIMIT';
+        this.homing = false;
         // Set zero
-        this.board.io.accelStepperZero(0);
+        this.board.io.accelStepperZero(this.stepper);
         // Disable the stepper
-        this.board.io.accelStepperEnable(this.id, DISABLED);
+        this.board.io.accelStepperEnable(this.stepper, DISABLED);
         // Emit error
-        this.emit('error');
+        this.emit('motorError');
       }
     });
 
@@ -105,18 +107,18 @@ export class Motor extends EventEmitter   {
 
     // Define stop
     this.limit.once('down',()=>{
-      logger.info(`limit hit, motor ${this.id} is home!`);
-      this.board.io.accelStepperZero(0);
+      logger(`limit hit, motor ${this.id} is home!`);
+      this.board.io.accelStepperZero(this.stepper);
       this.homing = false;
       this.home = true;
       this.emit('home', this.id);
     })
 
     // Slow for homing
-    this.board.io.accelStepperSpeed(this.id, 500);
+    this.board.io.accelStepperSpeed(this.stepper, 500);
 
     // We go back until we find switch
-    this.board.io.accelStepperStep(this.id, 4000 * BACKWARDS,()=>{
+    this.board.io.accelStepperStep(this.stepper, 4000 * BACKWARDS,()=>{
       logger(`motor ${this.id} homing movement complete!`);
 
       // If we are here we never found home :(
@@ -165,14 +167,16 @@ export class Motor extends EventEmitter   {
   /* ------------------------------ */
   enable(){
     logger(`enable ${this.id}`);
-    this.board.io.accelStepperEnable(this.id, ENABLED);
+    this.board.io.accelStepperEnable(this.stepper, ENABLED);
+    this.enabled = true;
     this.emit('enabled');
   }
 
   /* ------------------------------ */
   disable(){
     logger(`disable ${this.id}`);
-    this.board.io.accelStepperEnable(this.id, DISABLED);
+    this.board.io.accelStepperEnable(this.stepper, DISABLED);
+    this.enabled = false;
     this.emit('disabled');
   }
 
@@ -181,5 +185,13 @@ export class Motor extends EventEmitter   {
     this.error = undefined;
     this.emit('resetErrors');
   }
+
+   /* ------------------------------ */
+   zero(){
+    logger(`zero ${this.id}`);
+    this.board.io.accelStepperZero(this.stepper);
+    this.emit('enabled');
+  }
+  
 
 }

@@ -6,6 +6,8 @@ DEBUG='servo:.*' node index.js -p 3000
 
 # For Teensy 4.1
 
+You need to install a custom firmata with this http://firmatabuilder.com/
+
 You need to add this to the Boards.h in the `ConfigurableFirmata-2.10.1` src/utility directory
 
 ```cpp
