@@ -8,6 +8,8 @@ DEBUG='servo:.*' node index.js -p 3000
 
 You need to install a custom firmata with this http://firmatabuilder.com/
 
+You also need this https://www.arduino.cc/reference/en/libraries/encoder/
+
 You need to add this to the Boards.h in the `ConfigurableFirmata-2.10.1` src/utility directory
 
 ```cpp

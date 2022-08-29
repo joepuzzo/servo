@@ -6,7 +6,7 @@ import { Debug } from './debug.js';
 const logger = Debug('servo:motor' + '\t');
 
 // Constatnts
-const ENABLED = false;
+const ENABLED = true;
 const DISABLED = !ENABLED;
 const FORWARDS = 1;
 const BACKWARDS = -1;
@@ -60,7 +60,8 @@ export class Motor extends EventEmitter   {
       type: this.board.io.STEPPER.TYPE.DRIVER,
       stepPin: this.stepPin,
       directionPin: this.dirPin,
-      enablePin: 12, // TODO define this
+      enablePin: 12, // TODO define this to be actual enable pin we end up chosing
+      invertPins: [12]
     });
 
     // Enable stepper motor
@@ -68,13 +69,13 @@ export class Motor extends EventEmitter   {
     this.board.io.accelStepperEnable(this.stepper, ENABLED);
 
     // Configure limit switch
-    this.limit = new five.Button({
+    this.limit =  new five.Switch({
       pin: this.limitPin,
-      isPullup: true
+      type: "NC"
     });
 
     // Safety
-    this.limit.on('down',()=>{
+    this.limit.on('close',()=>{
 
       // If we are not homing stop the motor and error
       if( !this.homing ){
@@ -106,7 +107,7 @@ export class Motor extends EventEmitter   {
     this.emit('homing');
 
     // Define stop
-    this.limit.once('down',()=>{
+    this.limit.once('close',()=>{
       logger(`limit hit, motor ${this.id} is home!`);
       this.board.io.accelStepperZero(this.stepper);
       this.homing = false;
