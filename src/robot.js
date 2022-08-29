@@ -68,6 +68,7 @@ export class Robot extends EventEmitter   {
         motor.on('ready', (id) => this.motorReady(id) );
         motor.on('homing', () => this.robotState() );
         motor.on('motorError', () => this.robotState() );
+        motor.on('encoder', () => this.robotState() );
         motor.on('home', () => this.motorHomed() );
         motor.on('nohome', () => this.robotState() );
         motor.on('moved', () => this.robotState() );
