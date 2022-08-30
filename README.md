@@ -6,11 +6,13 @@ DEBUG='servo:.*' node index.js -p 3000
 
 # For Teensy 4.1
 
-You need to install a custom firmata with this http://firmatabuilder.com/
+1. You need to install a custom firmata with this http://firmatabuilder.com/
 
-You also need this https://www.arduino.cc/reference/en/libraries/encoder/
+2. You also need this https://www.arduino.cc/reference/en/libraries/encoder/
 
-You need to add this to the Boards.h in the `ConfigurableFirmata-2.10.1` src/utility directory
+3. You also need to change this `_minPulseWidth = 1;` to `_minPulseWidth = 4;` in the `ConfigurableFirmata-2.10.1`s  `AccelStepper.cpp` file 
+
+3. You need to add this to the Boards.h in the `ConfigurableFirmata-2.10.1` src/utility directory
 
 ```cpp
 
