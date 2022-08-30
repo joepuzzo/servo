@@ -17,7 +17,7 @@ const BACKWARDS = -1;
 export class Motor extends EventEmitter   {
 
   /* ------------------------------ */
-  constructor({ id, stepper, board, stepPin, dirPin, limitPin, encoderPinA, encoderPinB, limPos, limNeg, stepDeg }) {
+  constructor({ id, stepper, board, stepPin, dirPin, limitPin, encoderPinA, encoderPinB, limPos, limNeg, stepDeg, enablePin, invertEnable = true }) {
 
     logger(`creating motor ${id}`);
 
@@ -47,6 +47,8 @@ export class Motor extends EventEmitter   {
     this.ready = false;                         // if motor is ready
     this.encoderPosition = 0;                   // encoder position
     this.stepPosition = 0;                      // step position
+    this.invertEnable = invertEnable;           // If we want to invert the enable pin
+    this.enablePin = enablePin                  // what pin is used to enable this
   }
 
   /* ------------------------------ */
@@ -60,8 +62,8 @@ export class Motor extends EventEmitter   {
       type: this.board.io.STEPPER.TYPE.DRIVER,
       stepPin: this.stepPin,
       directionPin: this.dirPin,
-      enablePin: 12, // TODO define this to be actual enable pin we end up chosing
-      invertPins: [12]
+      enablePin: this.enablePin, // TODO define this to be actual enable pin we end up chosing
+      invertPins:  this.invertEnable ? [this.enablePin] : undefined
     });
 
     // Enable stepper motor
@@ -171,7 +173,7 @@ export class Motor extends EventEmitter   {
     logger(`motor ${this.id} set position to ${position} speed ${speed}`);
 
     // set speed before movement
-    this.board.io.accelStepperSpeed(this.id, speed);
+    this.board.io.accelStepperSpeed(this.stepper, speed);
 
     // convert pos to steps 
     const pos = this.stepDeg * position;
@@ -180,7 +182,7 @@ export class Motor extends EventEmitter   {
     this.stepPosition = pos;
 
     // Move to specified position
-    this.board.io.accelStepperTo(this.id, pos, ()=>{
+    this.board.io.accelStepperTo(this.stepper, pos, ()=>{
       logger(`motor ${this.id} movement complete`);
       this.emit('moved');
     });
@@ -212,6 +214,7 @@ export class Motor extends EventEmitter   {
    zero(){
     logger(`zero ${this.id}`);
     this.board.io.accelStepperZero(this.stepper);
+    this.stepPosition = 0;
     this.emit('enabled');
   }
   
