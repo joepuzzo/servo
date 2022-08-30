@@ -55,8 +55,8 @@ export class Robot extends EventEmitter   {
       const board = this.board;
 
       // Create Motors
-      this.motors.j0 = new Motor({ stepper: 0, id: 'j0', board, stepPin: 0, dirPin: 1, limitPin: 26, encoderPinA: 14, encoderPinB: 15, limPos: 170, limNeg: 170, stepDeg: 1.111111 });
-      // this.motors.j0 = new Motor({ stepper: 0, id: 'j0', board, stepPin: 0, dirPin: 1, limitPin: 26, encoderPinA: 14, encoderPinB: 15, limPos: 170, limNeg: 170, stepDeg: 44.44444444 });
+      // this.motors.j0 = new Motor({ stepper: 0, id: 'j0', board, stepPin: 0, dirPin: 1, limitPin: 26, encoderPinA: 14, encoderPinB: 15, limPos: 170, limNeg: 170, stepDeg: 1.111111 });
+      this.motors.j0 = new Motor({ stepper: 0, id: 'j0', board, stepPin: 0, dirPin: 1, limitPin: 26, encoderPinA: 14, encoderPinB: 15, limPos: 170, limNeg: 170, stepDeg: 44.44444444 });
       this.motors.j1 = new Motor({ stepper: 1, id: 'j1', board, stepPin: 2, dirPin: 3, limitPin: 27, encoderPinA: 17, encoderPinB: 16, limPos: 90, limNeg: 42, stepDeg: 55.55555556 });
       this.motors.j2 = new Motor({ stepper: 2, id: 'j2', board, stepPin: 4, dirPin: 5, limitPin: 28, encoderPinA: 19, encoderPinB: 18, limPos: 52, limNeg: 89, stepDeg: 55.55555556 });
       this.motors.j3 = new Motor({ stepper: 3, id: 'j3', board, stepPin: 6, dirPin: 7, limitPin: 29, encoderPinA: 20, encoderPinB: 21, limPos: 165, limNeg: 165, stepDeg: 42.72664356 });

@@ -129,8 +129,10 @@ export class Motor extends EventEmitter   {
     this.limit.once('close',()=>{
       logger(`limit hit, motor ${this.id} is home!`);
       this.board.io.accelStepperZero(this.stepper);
+      this.board.io.encoderResetToZero(this.stepper, true);
       this.homing = false;
       this.home = true;
+
       this.emit('home', this.id);
     })
 
