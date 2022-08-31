@@ -74,6 +74,11 @@ export const startServer = (config) => {
     robot.robotHome();
   });
 
+  socket.on('robotSetAngles', (angles) => {
+    logger(`controller says robotSetAngles`);
+    robot.robotSetAngles(angles);
+  });
+
   socket.on('home', () => {
     logger(`controller says home robot`);
     robot.home();

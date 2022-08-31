@@ -126,6 +126,14 @@ export class Robot extends EventEmitter   {
     if(Object.values(this.motors).every( motor => motor.ready)){
       logger(`all motors are ready!`);
       this.ready = true;
+
+      // Configure multi stepper group
+      this.board.io.multiStepperConfig({
+        groupNum: 0,
+        devices: [0, 1, 2, 3, 4, 5]
+      });
+
+      // We are now ready
       this.emit('ready');
     }
   }
@@ -160,7 +168,19 @@ export class Robot extends EventEmitter   {
     Object.values(this.motors).forEach(motor => {
       motor.goHome();
     });     
-    
+  }
+
+  robotSetAngles(angles){
+    logger(`home robot`);
+
+    // Update our state
+    this.homing = true;
+
+    // Use multi stepper command to command all motors
+    board.io.multiStepperTo(0, [2000, 2000, 2000, 2000, 2000, 2000], () => {
+      // End movement of all steppers
+    });
+
   }
 
 
