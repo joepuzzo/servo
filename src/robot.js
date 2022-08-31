@@ -127,11 +127,12 @@ export class Robot extends EventEmitter   {
       logger(`all motors are ready!`);
       this.ready = true;
 
+      // TODO this does not currently work using custom for now...
       // Configure multi stepper group
-      this.board.io.multiStepperConfig({
-        groupNum: 0,
-        devices: [0, 1, 2, 3, 4, 5]
-      });
+      // this.board.io.multiStepperConfig({
+      //   groupNum: 0,
+      //   devices: [0, 1, 2, 3, 4, 5]
+      // });
 
       // We are now ready
       this.emit('ready');
@@ -171,15 +172,48 @@ export class Robot extends EventEmitter   {
   }
 
   robotSetAngles(angles){
-    logger(`home robot`);
+    logger(`robotSetAngles robot`, angles);
 
-    // Update our state
-    this.homing = true;
-
+    // TODO this does not currently work so I wrote my own for now
     // Use multi stepper command to command all motors
-    board.io.multiStepperTo(0, [2000, 2000, 2000, 2000, 2000, 2000], () => {
+    //this.board.io.multiStepperTo(0, [2000, 2000, 2000, 2000, 2000, 2000], () => {
       // End movement of all steppers
-    });
+    //});
+    
+    // Step1: First find the stepper that will take the longest time
+    let longestTime = 0;
+    let longestMotor = this.motors.j0;
+		Object.values(this.motors).forEach((motor, i) => {
+
+			// convert pos to steps 
+    	const goal = motor.stepDeg * angles[i];
+      
+      // TODO will be better to use encoder pos instead of the step one
+			const thisDistance = goal - motor.stepPosition;
+      const thisTime = Math.abs(thisDistance) / motor.maxSpeed;
+
+      // Update longest if its longer
+      if(thisTime > longestTime){
+      	longestTime = thisTime;
+        longestMotor = motor; 
+    	}
+    }); 
+
+    logger(`Longest time is ${longestTime} for motor ${longestMotor.id}`);
+
+		// Step2: Move via speed for each based on time
+		Object.values(this.motors).forEach((motor, i) => {
+
+      // convert pos to steps 
+    	const goal = motor.stepDeg * angles[i];
+      
+      // TODO will be better to use encoder pos instead of the step one
+			const thisDistance = goal - motor.stepPosition;
+	    const thisSpeed = Math.abs(thisDistance) / longestTime;
+     
+      // Now go! ( make sure we pass degrees and not steps to this func )
+      motor.setPosition(angles[i], thisSpeed);
+    })
 
   }
 

@@ -49,6 +49,7 @@ export class Motor extends EventEmitter   {
     this.stepPosition = 0;                      // step position
     this.invertEnable = invertEnable;           // If we want to invert the enable pin
     this.enablePin = enablePin                  // what pin is used to enable this
+    this.maxSpeed = 500;                        // the max speed for this motor in steps/s
   }
 
   /* ------------------------------ */
@@ -85,7 +86,7 @@ export class Motor extends EventEmitter   {
 
     // Enable encoder TODO ( maybe we should disable and poll ?? )
     // TODO maybe this needs to be moved to robot or maybe can be done per encoder ??
-    this.board.io.encoderEnableReporting(true)
+    this.board.io.encoderEnableReporting(false)
 
     // Subscribe to encoder events
     this.board.io.on(`encoder-position-${this.stepper}`, (event)=>{
@@ -103,6 +104,8 @@ export class Motor extends EventEmitter   {
         logger(`Error: limit hit for motor ${this.id}`);
         this.error = 'LIMIT';
         this.homing = false;
+				// Update our pos to zero
+    		this.stepPosition = 0;
         // Set zero
         this.board.io.accelStepperZero(this.stepper);
         // Disable the stepper
@@ -182,8 +185,8 @@ export class Motor extends EventEmitter   {
     this.stepPosition = pos;
 
     // Move to specified position
-    this.board.io.accelStepperTo(this.stepper, pos, ()=>{
-      logger(`motor ${this.id} movement complete`);
+    this.board.io.accelStepperTo(this.stepper, pos, () => {
+      logger(`motor ${this.id} movement to ${pos} complete`);
       this.emit('moved');
     });
   }
