@@ -82,18 +82,18 @@ export class Motor extends EventEmitter   {
       encoderNum: this.stepper,
       encoderPin1: this.encoderPinA,
       encoderPin2: this.encoderPinB,
-     });
+    });
 
-    // Enable encoder TODO ( maybe we should disable and poll ?? )
-    // TODO maybe this needs to be moved to robot or maybe can be done per encoder ??
-    this.board.io.encoderEnableReporting(true)
+    // For now we dont have each motor report
+    // instead, the robot will poll on a fixed interval so we dont flood events to ui
+    this.board.io.encoderEnableReporting(false)
 
     // Subscribe to encoder events
     this.board.io.on(`encoder-position-${this.stepper}`, (event)=>{
       // Example: event = { direction: 1, position: 280, number: 0 };
       this.encoderPosition = event.position;
-      // update event 
-      this.emit('encoder');
+      // update event Note: I have this turned off for now because robot polling is better
+      //this.emit('encoder');
     });
 
     // Safety

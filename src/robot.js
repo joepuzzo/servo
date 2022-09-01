@@ -76,10 +76,24 @@ export class Robot extends EventEmitter   {
         motor.on('resetErrors', () => this.robotState() );
       });
 
-      // Start all motors
-      Object.values(this.motors).forEach(motor => {
-        motor.start();
-      });      
+     // Report all encoder updates
+     setInterval(()=>{
+
+			// Ask the board to report all encoders
+      // Note: this will trigger events that each motor will hear and update themselves
+     	this.board.io.encoderReportAll(() => {
+				// Note we could have the motors each do this but this is better
+				// i.e call this on interval to get all pos instead of polling 1 time per motor
+        // in other words one event every polling interval instead of 6 events 
+        this.emit('encoder');
+			});
+
+     }, 100);
+
+     // Start all motors
+     Object.values(this.motors).forEach(motor => {
+       motor.start();
+     });      
 
    }
 
