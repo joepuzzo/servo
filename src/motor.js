@@ -104,12 +104,20 @@ export class Motor extends EventEmitter   {
         logger(`Error: limit hit for motor ${this.id}`);
         this.error = 'LIMIT';
         this.homing = false;
+        this.enabled = false;
+
+        // Disable the stepper because this is an error
+        this.board.io.accelStepperEnable(this.stepper, DISABLED);
+
 				// Update our pos to zero
     		this.stepPosition = 0;
-        // Set zero
+
+        // Set zero for the stepper
         this.board.io.accelStepperZero(this.stepper);
-        // Disable the stepper
-        this.board.io.accelStepperEnable(this.stepper, DISABLED);
+
+				// Next we reset the encoder pos to zero
+      	this.board.io.encoderResetToZero(this.stepper, true);
+
         // Emit error
         this.emit('motorError');
       }
@@ -133,11 +141,22 @@ export class Motor extends EventEmitter   {
     // Define stop
     this.limit.once('close',()=>{
       logger(`limit hit, motor ${this.id} is home!`);
+
+			// First we stop the motor
+      this.board.io.accelStepperStop(this.stepper);
+
+			// Then we set the stepper location to zero
       this.board.io.accelStepperZero(this.stepper);
+
+			// Next we reset the encoder pos to zero
       this.board.io.encoderResetToZero(this.stepper, true);
+
+			// Finally we update our internal parameters
+    	this.stepPosition = 0;
       this.homing = false;
       this.home = true;
 
+			// Let others know we are home
       this.emit('home', this.id);
     })
 
@@ -173,7 +192,7 @@ export class Motor extends EventEmitter   {
   /* ------------------------------ */
   setPosition( position, speed = 500 ){
 
-    logger(`motor ${this.id} set position to ${position} speed ${speed}`);
+    logger(`motor ${this.id} set position to ${position}º speed ${speed} steps/s`);
 
     // set speed before movement
     this.board.io.accelStepperSpeed(this.stepper, speed);
@@ -181,12 +200,15 @@ export class Motor extends EventEmitter   {
     // convert pos to steps 
     const pos = this.stepDeg * position;
 
-    // update our step pos
-    this.stepPosition = pos;
+    logger(`motor ${this.id} moving to step ${pos} to achive ${position}º`);
 
     // Move to specified position
-    this.board.io.accelStepperTo(this.stepper, pos, () => {
-      logger(`motor ${this.id} movement to ${pos} complete`);
+    this.board.io.accelStepperTo(this.stepper, pos, (actual) => {
+      logger(`motor ${this.id} movement to ${pos} moved to ${actual}`);
+    	// update our step pos 
+			// ( note we use actual because it could have been overidden/stopped )
+    	this.stepPosition = actual;
+			// let others know our movement is complete
       this.emit('moved');
     });
   }
@@ -217,6 +239,7 @@ export class Motor extends EventEmitter   {
    zero(){
     logger(`zero ${this.id}`);
     this.board.io.accelStepperZero(this.stepper);
+    this.board.io.encoderResetToZero(this.stepper, true);
     this.stepPosition = 0;
     this.emit('enabled');
   }
