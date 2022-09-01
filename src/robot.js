@@ -129,6 +129,10 @@ export class Robot extends EventEmitter   {
 
     // return meta
     return {
+      stopped: this.stopped, 
+      ready: this.ready, 
+      home: this.home,
+      homing: this.homing,
       motors
     }
   }
@@ -187,6 +191,34 @@ export class Robot extends EventEmitter   {
     Object.values(this.motors).forEach(motor => {
       motor.goHome();
     });     
+
+    this.emit("meta");
+  }
+
+  robotStop(){
+    logger(`stop robot`);
+
+    this.stopped = true;
+
+    // Disable all motors
+    Object.values(this.motors).forEach(motor => {
+      motor.disable();
+    });     
+
+    this.emit("meta");
+  }
+
+  robotEnable(){
+    logger(`enable robot`);
+
+    this.stopped = false;
+
+    // Enable all motors
+    Object.values(this.motors).forEach(motor => {
+      motor.enable();
+    });     
+
+    this.emit("meta");
   }
 
   robotSetAngles(angles){

@@ -32,6 +32,11 @@ export const startServer = (config) => {
     socket.emit('state', robot.state );  
   });
 
+  robot.on('meta', () => {
+    logger("sending meta");
+    socket.emit("register", robot.meta);
+  });
+
   /* ---------- Subscribe to socket events ---------- */
 
   socket.on('connect', ()=>{
@@ -77,6 +82,16 @@ export const startServer = (config) => {
   socket.on('robotHome', () => {
     logger(`controller says robotHome`);
     robot.robotHome();
+  });
+
+  socket.on('robotStop', () => {
+    logger(`controller says robotStop`);
+    robot.robotStop();
+  });
+
+	socket.on('robotEnable', () => {
+    logger(`controller says robotEnable`);
+    robot.robotEnable();
   });
 
   socket.on('robotSetAngles', (angles) => {
