@@ -86,7 +86,7 @@ export class Motor extends EventEmitter   {
 
     // Enable encoder TODO ( maybe we should disable and poll ?? )
     // TODO maybe this needs to be moved to robot or maybe can be done per encoder ??
-    this.board.io.encoderEnableReporting(false)
+    this.board.io.encoderEnableReporting(true)
 
     // Subscribe to encoder events
     this.board.io.on(`encoder-position-${this.stepper}`, (event)=>{

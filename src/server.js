@@ -21,6 +21,11 @@ export const startServer = (config) => {
     socket.emit('state', robot.state );
   });
 
+  robot.on('encoder', () => {
+    // Specifically dont log here ( to much logging )
+    socket.emit('encoder', robot.state );
+  });
+
   robot.on('ready', () => {
     logger("robot ready sending state and registering");
     socket.emit('register', robot.meta);
