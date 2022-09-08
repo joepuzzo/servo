@@ -17,7 +17,7 @@ const BACKWARDS = -1;
 export class Motor extends EventEmitter   {
 
   /* ------------------------------ */
-  constructor({ id, stepper, board, stepPin, dirPin, limitPin, encoderPinA, encoderPinB, limPos, limNeg, stepDeg, enablePin, invertEnable = true }) {
+  constructor({ id, stepper, board, stepPin, dirPin, limitPin, encoderPinA, encoderPinB, limPos, limNeg, stepDeg, enablePin, limitDir = FORWARDS, invertEnable = true }) {
 
     logger(`creating motor ${id}`);
 
@@ -33,12 +33,12 @@ export class Motor extends EventEmitter   {
     this.limitPin = limitPin;                   // the limit switch pin on the arduino
     this.encoderPinA = encoderPinA;             // the first encoder pin on the arduino
     this.encoderPinB = encoderPinB;             // the second encoder pin on the arduino
+    this.limitDir = limitDir;                   // the direction to get to the limit switch
     this.limPos = limPos;                       // the limit in posative direction in degrees
     this.limNeg = limNeg;                       // the limit in negative direction in degrees
     this.stepDeg = stepDeg;                     // motor steps per degree
     this.axisLimit = limPos + limNeg;           // define total axis travel
     this.stepLimit = this.axisLimit * stepDeg;  // steps full movement of axis
-    this.zeroStep = this.limNeg * stepDeg;      // steps from 0 --- to ---> axis zero
     this.enabled = false;                       // will enable/disable motor
     this.error = undefined;                     // current error state for this motor
     this.robotStopped = false;                  // the motor might stop things but the robot might also have stop set
@@ -50,6 +50,7 @@ export class Motor extends EventEmitter   {
     this.invertEnable = invertEnable;           // If we want to invert the enable pin
     this.enablePin = enablePin                  // what pin is used to enable this
     this.maxSpeed = 500;                        // the max speed for this motor in steps/s
+    this.zeroStep = limitDir === FORWARDS ? this.limPos * stepDeg * -1 : this.limNeg * stepDeg;      // steps from 0 --- to ---> axis zero ( 0 is where limit switch is ) 
   }
 
   /* ------------------------------ */
@@ -100,7 +101,7 @@ export class Motor extends EventEmitter   {
     this.limit.on('close',()=>{
 
       // If we are not homing stop the motor and error
-      if( !this.homing ){
+      if( !this.homing && !this.home ){
         logger(`Error: limit hit for motor ${this.id}`);
         this.error = 'LIMIT';
         this.homing = false;
@@ -164,7 +165,7 @@ export class Motor extends EventEmitter   {
     this.board.io.accelStepperSpeed(this.stepper, 500);
 
     // We go back until we find switch
-    this.board.io.accelStepperStep(this.stepper, 4000 * BACKWARDS,()=>{
+    this.board.io.accelStepperStep(this.stepper, 20000 * this.limitDir,()=>{
       logger(`motor ${this.id} homing movement complete!`);
 
       // If we are here we never found home :(
@@ -192,13 +193,24 @@ export class Motor extends EventEmitter   {
   /* ------------------------------ */
   setPosition( position, speed = 500 ){
 
+    // No longer home
+    // NOTE: timeout is because switch might get triggered again after it first leaves
+    setTimeout(()=>{
+      this.home = false;
+    }, 500)
+
     logger(`motor ${this.id} set position to ${position}º speed ${speed} steps/s`);
 
     // set speed before movement
     this.board.io.accelStepperSpeed(this.stepper, speed);
 
     // convert pos to steps 
-    const pos = this.stepDeg * position;
+    let pos = this.stepDeg * position;
+
+    logger(`motor ${this.id} moving to ${pos} steps before offset to achive ${position}º`);
+
+    // offset the pos by zeroStep
+    pos = pos + this.zeroStep;
 
     logger(`motor ${this.id} moving to step ${pos} to achive ${position}º`);
 
