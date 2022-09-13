@@ -89,6 +89,16 @@ export const startServer = (config) => {
     robot.robotStop();
   });
 
+  socket.on('robotFreeze', () => {
+    logger(`controller says robotFreeze`);
+    robot.robotFreeze();
+  });
+
+  socket.on('robotCenter', () => {
+    logger(`controller says robotCenter`);
+    robot.robotCenter();
+  });
+
 	socket.on('robotEnable', () => {
     logger(`controller says robotEnable`);
     robot.robotEnable();

@@ -242,6 +242,19 @@ export class Motor extends EventEmitter   {
   }
 
   /* ------------------------------ */
+  freeze(){
+    logger(`freeze ${this.id}`);
+    this.board.io.accelStepperStop(this.stepper);
+    this.emit('frozen');
+  }
+
+  /* ------------------------------ */
+  center(){
+    logger(`center ${this.id}`);
+    this.setPosition(0);
+  }
+
+  /* ------------------------------ */
   resetErrors(){
     this.error = undefined;
     this.emit('resetErrors');

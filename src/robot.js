@@ -212,6 +212,28 @@ export class Robot extends EventEmitter   {
     this.emit("meta");
   }
 
+  robotFreeze(){
+    logger(`freeze robot`);
+
+    // Freeze all motors ( stops but does not disable )
+    Object.values(this.motors).forEach(motor => {
+      motor.freeze();
+    });     
+
+    this.emit("meta");
+  }
+
+  robotCenter(){
+    logger(`center robot`);
+
+    // Freeze all motors ( stops but does not disable )
+    Object.values(this.motors).forEach(motor => {
+      motor.center();
+    });     
+
+    this.emit("meta");
+  }
+
   robotEnable(){
     logger(`enable robot`);
 
