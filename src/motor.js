@@ -46,6 +46,7 @@ export class Motor extends EventEmitter   {
     this.home = false;                          // if the motor is currently home
     this.homed = false;                         // if the motor has been homed
     this.ready = false;                         // if motor is ready
+    this.moving = false;                        // if motor is in motion
     this.encoderPosition = 0;                   // encoder position
     this.stepPosition = 0;                      // step position
     this.invertEnable = invertEnable;           // If we want to invert the enable pin
@@ -107,6 +108,7 @@ export class Motor extends EventEmitter   {
         this.error = 'LIMIT';
         this.homing = false;
         this.enabled = false;
+        this.moving = false;
 
         // Disable the stepper because this is an error
         this.board.io.accelStepperEnable(this.stepper, DISABLED);
@@ -138,6 +140,7 @@ export class Motor extends EventEmitter   {
 
     // We are now in homing state
     this.homing = true;
+    this.moving = true;
     this.emit('homing');
 
     // Define stop
@@ -158,6 +161,7 @@ export class Motor extends EventEmitter   {
       this.homing = false;
       this.home = true;
       this.homed = true;
+      this.moving = false;
 
 			// Let others know we are home
       this.emit('home', this.id);
@@ -190,7 +194,8 @@ export class Motor extends EventEmitter   {
       ready: this.ready, 
       stepPosition: this.stepPosition,
       encoderPosition: this.encoderPosition,
-      error: this.error
+      error: this.error,
+      moving: this.moving
     }
   }
 
@@ -212,6 +217,9 @@ export class Motor extends EventEmitter   {
       this.emit('motorError');
       return;
     }
+
+    // We are now in motion
+    this.moving = true; 
 
     // No longer home
     // NOTE: timeout is because switch might get triggered again after it first leaves
@@ -240,6 +248,8 @@ export class Motor extends EventEmitter   {
     	// update our step pos 
 			// ( note we use actual because it could have been overidden/stopped )
     	this.stepPosition = actual;
+      // Done moving
+      this.moving = false;
 			// let others know our movement is complete
       this.emit('moved');
     });
@@ -267,6 +277,7 @@ export class Motor extends EventEmitter   {
   freeze(){
     logger(`freeze ${this.id}`);
     this.board.io.accelStepperStop(this.stepper);
+    this.moving = false;
     this.emit('frozen');
   }
 
