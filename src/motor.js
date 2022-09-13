@@ -193,6 +193,14 @@ export class Motor extends EventEmitter   {
   /* ------------------------------ */
   setPosition( position, speed = 1500 ){
 
+    // Safety check ( don't allow set pos to an angle outside the limits )
+    if( position > this.limPos || position < -this.limNeg ){
+      logger(`ERROR: motor ${this.id} set position to ${position}º is outside the bounds of this motor!!!`);
+      this.error = 'OUT_OF_BOUNDS';
+      this.emit('motorError');
+      return;
+    }
+
     // No longer home
     // NOTE: timeout is because switch might get triggered again after it first leaves
     setTimeout(()=>{
