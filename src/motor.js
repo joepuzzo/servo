@@ -49,7 +49,7 @@ export class Motor extends EventEmitter   {
     this.stepPosition = 0;                      // step position
     this.invertEnable = invertEnable;           // If we want to invert the enable pin
     this.enablePin = enablePin                  // what pin is used to enable this
-    this.maxSpeed = 500;                       // the max speed for this motor in steps/s
+    this.maxSpeed = 1500;                       // the max speed for this motor in steps/s
     this.zeroStep = limitDir === FORWARDS ? ( this.limPos + limitAdj )* stepDeg * -1 : ( this.limNeg + limitAdj ) * stepDeg;      // steps from 0 --- to ---> axis zero ( 0 is where limit switch is ) 
   }
 
@@ -191,7 +191,7 @@ export class Motor extends EventEmitter   {
   }
 
   /* ------------------------------ */
-  setPosition( position, speed = 1000 ){
+  setPosition( position, speed = 1500 ){
 
     // No longer home
     // NOTE: timeout is because switch might get triggered again after it first leaves
