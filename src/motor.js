@@ -251,7 +251,7 @@ export class Motor extends EventEmitter   {
       // Done moving
       this.moving = false;
 			// let others know our movement is complete
-      this.emit('moved');
+      this.emit('moved', this.id);
     });
   }
 

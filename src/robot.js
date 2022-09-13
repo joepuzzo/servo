@@ -32,6 +32,7 @@ export class Robot extends EventEmitter   {
     this.stopped = false;             // will disable the robot
     this.ready = false;               // if the robot is ready
     this.homing = false;              // if the robot is currently homing
+    this.moving = false;              // if the robot is moving to a given position ( set angles was called )
     this.home = false;                // if the robot is currently home
     this.mock = mock;                 // if we are in mock mode ( no actual arduino connected )
 
@@ -72,9 +73,9 @@ export class Robot extends EventEmitter   {
         motor.on('homing', () => this.robotState() );
         motor.on('motorError', () => this.robotState() );
         motor.on('encoder', () => this.robotEncoder() );
-        motor.on('home', () => this.motorHomed() );
+        motor.on('home', (id) => this.motorHomed(id) );
         motor.on('nohome', () => this.robotState() );
-        motor.on('moved', () => this.robotState() );
+        motor.on('moved', (id) => this.motorMoved(id) );
         motor.on('disabled', () => this.robotState() );
         motor.on('enabled', () => this.robotState() );
         motor.on('resetErrors', () => this.robotState() );
@@ -137,6 +138,7 @@ export class Robot extends EventEmitter   {
       ready: this.ready, 
       home: this.home,
       homing: this.homing,
+      moving: this.moving,
       motors
     }
   }
@@ -181,6 +183,21 @@ export class Robot extends EventEmitter   {
 
   robotEncoder(){
     this.emit('encoder');
+  }
+
+  motorMoved(id) {
+    logger(`motor ${id} moved`);
+
+    // If we are moving robot to a position check if its done
+    if(this.moving){
+      if(Object.values(this.motors).every( motor => !motor.moving)){
+        logger(`all motors have moved!`);
+        this.moving = false;
+      }
+    }
+
+    this.emit("meta");
+    this.emit('state');
   }
 
   /* -------------------- Robot Actions -------------------- */
@@ -249,6 +266,9 @@ export class Robot extends EventEmitter   {
 
   robotSetAngles(angles){
     logger(`robotSetAngles robot`, angles);
+
+    // We are moving to a new location
+    this.moving = true;
 
     // TODO this does not currently work so I wrote my own for now
     // Use multi stepper command to command all motors
