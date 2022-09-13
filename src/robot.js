@@ -193,6 +193,7 @@ export class Robot extends EventEmitter   {
       if(Object.values(this.motors).every( motor => !motor.moving)){
         logger(`all motors have moved!`);
         this.moving = false;
+        this.emit("moved")
       }
     }
 

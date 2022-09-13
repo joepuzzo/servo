@@ -37,6 +37,12 @@ export const startServer = (config) => {
     socket.emit("register", robot.meta);
   });
 
+  robot.on('moved', () => {
+    logger("sending moved");
+    socket.emit("moved", robot.meta);
+  });
+
+
   /* ---------- Subscribe to socket events ---------- */
 
   socket.on('connect', ()=>{
