@@ -44,6 +44,7 @@ export class Motor extends EventEmitter   {
     this.robotStopped = false;                  // the motor might stop things but the robot might also have stop set
     this.homing = false;                        // if motor is process of homing
     this.home = false;                          // if the motor is currently home
+    this.homed = false;                         // if the motor has been homed
     this.ready = false;                         // if motor is ready
     this.encoderPosition = 0;                   // encoder position
     this.stepPosition = 0;                      // step position
@@ -156,6 +157,7 @@ export class Motor extends EventEmitter   {
     	this.stepPosition = 0;
       this.homing = false;
       this.home = true;
+      this.homed = true;
 
 			// Let others know we are home
       this.emit('home', this.id);
@@ -180,8 +182,10 @@ export class Motor extends EventEmitter   {
   /* ------------------------------ */
   get state(){
     return {
+      id: this.id,
       homing: this.homing,
       home: this.home,
+      homed: this.homed,
       enabled: this.enabled,
       ready: this.ready, 
       stepPosition: this.stepPosition,
@@ -197,6 +201,14 @@ export class Motor extends EventEmitter   {
     if( position > this.limPos || position < -this.limNeg ){
       logger(`ERROR: motor ${this.id} set position to ${position}º is outside the bounds of this motor!!!`);
       this.error = 'OUT_OF_BOUNDS';
+      this.emit('motorError');
+      return;
+    }
+
+    // Safety check ( dont allow user to set pos if motor was never homed )
+    if( !this.homed ){
+      logger(`ERROR: motor ${this.id} set position to ${position}º cannot be completed as motor has never been homed!!`);
+      this.error = 'NEVER_HOMED';
       this.emit('motorError');
       return;
     }
@@ -246,6 +258,8 @@ export class Motor extends EventEmitter   {
     logger(`disable ${this.id}`);
     this.board.io.accelStepperEnable(this.stepper, DISABLED);
     this.enabled = false;
+    // Whenever user disables we need to home again
+    this.homed = false;
     this.emit('disabled');
   }
 
