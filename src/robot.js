@@ -174,6 +174,7 @@ export class Robot extends EventEmitter   {
         // If we are not running calibration we are home otherwise we want to send it to center
         if( !this.calibrating ) { 
           this.home = true 
+          this.homing = false;
         } else {
           // Now go to center
           setTimeout(()=>{
@@ -279,6 +280,9 @@ export class Robot extends EventEmitter   {
   robotCenter(){
     logger(`center robot`);
 
+    // We are moving whole robot
+    this.moving = true;
+
     // Freeze all motors ( stops but does not disable )
     Object.values(this.motors).forEach(motor => {
       motor.center();
@@ -347,6 +351,7 @@ export class Robot extends EventEmitter   {
       motor.setPosition(angles[i], thisSpeed);
     })
 
+    this.emit("meta");
   }
 
 
