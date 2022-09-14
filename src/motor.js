@@ -107,6 +107,7 @@ export class Motor extends EventEmitter   {
         logger(`Error: limit hit for motor ${this.id}`);
         this.error = 'LIMIT';
         this.homing = false;
+        this.home = true;
         this.enabled = false;
         this.moving = false;
 
@@ -135,6 +136,14 @@ export class Motor extends EventEmitter   {
 
   /* ------------------------------ */
   goHome(){
+
+    // Cant home if we are already home
+    if(this.home){
+      logger(`ERROR: motor ${this.id} is already home`);
+      this.error = 'DOUBLE_HOME';
+      this.emit('motorError');
+      return;
+    }
 
     logger(`motor ${this.id} starting to home`);
 
