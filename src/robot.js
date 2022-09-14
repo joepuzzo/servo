@@ -213,6 +213,7 @@ export class Robot extends EventEmitter   {
       if(Object.values(this.motors).every( motor => !motor.moving)){
         logger(`all motors have centered for calibration!`);
         this.calibrating = false;
+        this.homing = false;
         // Now home J6 one more time
         this.motors.j5.goHome();
       }
