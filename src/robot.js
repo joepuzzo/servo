@@ -35,6 +35,7 @@ export class Robot extends EventEmitter   {
     this.moving = false;              // if the robot is moving to a given position ( set angles was called )
     this.home = false;                // if the robot is currently home
     this.mock = mock;                 // if we are in mock mode ( no actual arduino connected )
+    this.calibrating = false;         // if the robot is currently running a calibration
 
     this.board = mock                 // Jhonny5 board 
       ? mockBoard()
@@ -170,7 +171,12 @@ export class Robot extends EventEmitter   {
     if(this.homing){
       if(Object.values(this.motors).every( motor => motor.home)){
         logger(`all motors are home!`);
-        this.home = true;
+        // If we are not running calibration we are home otherwise we want to send it to center
+        if( !this.calibrating ) { 
+          this.home = true 
+        } else {
+          this.robotCenter();
+        }
       }
     }
 
@@ -193,7 +199,17 @@ export class Robot extends EventEmitter   {
       if(Object.values(this.motors).every( motor => !motor.moving)){
         logger(`all motors have moved!`);
         this.moving = false;
-        this.emit("moved")
+        this.emit("moved");
+      }
+    }
+
+    // If we are calibrating the robot check if its done
+    if(this.calibrating){
+      if(Object.values(this.motors).every( motor => !motor.moving)){
+        logger(`all motors have centered for calibration!`);
+        this.calibrating = false;
+        // Now home J6 one more time
+        this.motors.j5.goHome();
       }
     }
 
@@ -215,6 +231,17 @@ export class Robot extends EventEmitter   {
     });     
 
     this.emit("meta");
+  }
+
+  robotCalibrate(){
+    logger(`calibrate robot`);
+
+    // Update our state
+    this.homing = true;
+    this.calibrating = true;
+
+    // Home the robot
+    this.robotHome();
   }
 
   robotStop(){

@@ -90,6 +90,11 @@ export const startServer = (config) => {
     robot.robotHome();
   });
 
+  socket.on('robotCalibrate', () => {
+    logger(`controller says robotCalibrate`);
+    robot.robotCalibrate();
+  });
+
   socket.on('robotStop', () => {
     logger(`controller says robotStop`);
     robot.robotStop();
