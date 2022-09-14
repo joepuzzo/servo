@@ -304,8 +304,8 @@ export class Robot extends EventEmitter   {
     this.emit("meta");
   }
 
-  robotSetAngles(angles){
-    logger(`robotSetAngles robot`, angles);
+  robotSetAngles(angles, speed){
+    logger(`robotSetAngles at speed ${speed} angles:`, angles);
 
     // We are moving to a new location
     this.moving = true;
@@ -315,18 +315,21 @@ export class Robot extends EventEmitter   {
     //this.board.io.multiStepperTo(0, [2000, 2000, 2000, 2000, 2000, 2000], () => {
       // End movement of all steppers
     //});
-    
+     
     // Step1: First find the stepper that will take the longest time
     let longestTime = 0;
     let longestMotor = this.motors.j0;
 		Object.values(this.motors).forEach((motor, i) => {
+
+      // We want to determine the speed ( dont allow user to go over motor max speed )
+      const maxSpeed = speed && ( speed <= motor.maxSpeed ) ? speed : motor.maxSpeed;
 
 			// convert pos to steps 
     	const goal = (motor.stepDeg * angles[i] )+ motor.zeroStep;
       
       // TODO will be better to use encoder pos instead of the step one
 			const thisDistance = goal - motor.stepPosition;
-      const thisTime = Math.abs(thisDistance) / motor.maxSpeed;
+      const thisTime = Math.abs(thisDistance) / maxSpeed;
 
       // Update longest if its longer
       if(thisTime > longestTime){
