@@ -171,16 +171,18 @@ export class Robot extends EventEmitter   {
     if(this.homing){
       if(Object.values(this.motors).every( motor => motor.home)){
         logger(`all motors are home!`);
-        // If we are not running calibration we are home otherwise we want to send it to center
-        if( !this.calibrating ) { 
-          this.home = true 
-          this.homing = false;
-        } else {
+
+        this.home = true 
+        this.homing = false;
+
+        // If we were running calibration then go to center
+        if( this.calibrating ) { 
           // Now go to center
           setTimeout(()=>{
             this.robotCenter();
           }, [500])
         }
+
       }
     }
 
@@ -213,9 +215,6 @@ export class Robot extends EventEmitter   {
       if(Object.values(this.motors).every( motor => !motor.moving)){
         logger(`all motors have centered for calibration!`);
         this.calibrating = false;
-        this.homing = false;
-        // Now home J6 one more time
-        this.motors.j5.goHome();
       }
     }
 
@@ -236,9 +235,17 @@ export class Robot extends EventEmitter   {
     this.homing = true;
 
     // Home all motors
-    Object.values(this.motors).forEach(motor => {
-      motor.goHome();
+    Object.values(this.motors).forEach((motor, i) => {
+      // Because cable sometimes hits the last limit switch we home that guy after a timeout
+      if( i != 4 ){
+        motor.goHome();
+      }
     });     
+
+    // Now set the last guys home timeout
+    setTimeout(()=>{
+      this.motors.j4.goHome();
+    }, 4000)
 
     this.emit("meta");
   }
