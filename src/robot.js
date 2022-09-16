@@ -55,6 +55,9 @@ export class Robot extends EventEmitter   {
    */
    setup() {
 
+     // First read in the config 
+     this.readConfig();
+
      logger(`starting robot with id ${this.id}`);
 
       // temp var to pass to motors
@@ -102,6 +105,47 @@ export class Robot extends EventEmitter   {
      });      
 
    }
+
+  /** ------------------------------
+   * readConfig
+   */
+  readConfig() {
+    // Read in config file ( create if it does not exist yet )
+    try {
+
+      // Get filename
+      const filename = path.resolve('config.json');
+
+      // Check if it exists and create if it does not
+      if (!fs.existsSync(filename)) {
+        console.log('Config file does not exist creating');
+        fs.writeFileSync(filename, JSON.stringify({}));
+      }
+
+      // Read in config file 
+      const config = JSON.parse(fs.readFileSync(filename, 'utf8'));
+
+      logger('Successfully read in config', config);
+
+      this.config = config;
+    } catch(err) {
+      console.error(err);
+    }
+  }
+
+  /** ------------------------------
+   * writeConfig
+   */
+  writeConfig() {
+    try {
+      // Get filename
+      const filename = path.resolve('config.json');
+      // Write config
+      fs.writeFileSync(filename, JSON.stringify(this.config));
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   /** ------------------------------
    * get state
