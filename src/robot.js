@@ -62,17 +62,24 @@ export class Robot extends EventEmitter   {
      // First read in the config 
      this.readConfig();
 
+     const j0LimitAdj = this.config.j0?.limitAdj ?? 0;
+     const j1LimitAdj = this.config.j1?.limitAdj ?? 0;
+     const j2LimitAdj = this.config.j2?.limitAdj ?? 0;
+     const j3LimitAdj = this.config.j3?.limitAdj ?? 0;
+     const j4LimitAdj = this.config.j4?.limitAdj ?? 0;
+     const j5LimitAdj = this.config.j5?.limitAdj ?? 0;
+
      logger(`starting robot with id ${this.id}`);
 
       // temp var to pass to motors
       const board = this.board;
 
       // Create Motors
-      this.motors.j0 = new Motor({ stepper: 0, id: 'j0', board, stepPin: 0, dirPin: 1, limitPin: 26, enablePin: 33, encoderPinA: 14, encoderPinB: 15, limPos: 170, limNeg: 170, stepDeg: 44.44444444, limitAdj: 2, maxSpeed: 1000 });
-      this.motors.j1 = new Motor({ stepper: 1, id: 'j1', board, stepPin: 2, dirPin: 3, limitPin: 27, enablePin: 34, encoderPinA: 17, encoderPinB: 16, limPos: 42, limNeg: 90, stepDeg: 55.55555556, maxSpeed: 1000, limitAdj: -1.5 });
-      this.motors.j2 = new Motor({ stepper: 2, id: 'j2', board, stepPin: 4, dirPin: 5, limitPin: 28, enablePin: 35, encoderPinA: 19, encoderPinB: 18, limPos: 20, limNeg: 145, stepDeg: 55.55555556, limitDir: BACKWARDS, limitAdj: 2 });
+      this.motors.j0 = new Motor({ stepper: 0, id: 'j0', board, stepPin: 0, dirPin: 1, limitPin: 26, enablePin: 33, encoderPinA: 14, encoderPinB: 15, limPos: 170, limNeg: 170, stepDeg: 44.44444444, limitAdj: j0LimitAdj, maxSpeed: 1400 });
+      this.motors.j1 = new Motor({ stepper: 1, id: 'j1', board, stepPin: 2, dirPin: 3, limitPin: 27, enablePin: 34, encoderPinA: 17, encoderPinB: 16, limPos: 42, limNeg: 90, stepDeg: 55.55555556, maxSpeed: 1200, limitAdj: j1LimitAdj });
+      this.motors.j2 = new Motor({ stepper: 2, id: 'j2', board, stepPin: 4, dirPin: 5, limitPin: 28, enablePin: 35, encoderPinA: 19, encoderPinB: 18, limPos: 20, limNeg: 145, stepDeg: 55.55555556, limitDir: BACKWARDS, limitAdj: j2LimitAdj });
       this.motors.j3 = new Motor({ stepper: 3, id: 'j3', board, stepPin: 6, dirPin: 7, limitPin: 29, enablePin: 36, encoderPinA: 20, encoderPinB: 21, limPos: 165, limNeg: 165, stepDeg: 42.72664356, invertEnable: false, limitDir: BACKWARDS });
-      this.motors.j4 = new Motor({ stepper: 4, id: 'j4', board, stepPin: 8, dirPin: 9, limitPin: 30, enablePin: 37, encoderPinA: 23, encoderPinB: 22, limPos: 100, limNeg: 100, stepDeg: 21.86024888, limitAdj: -2 });
+      this.motors.j4 = new Motor({ stepper: 4, id: 'j4', board, stepPin: 8, dirPin: 9, limitPin: 30, enablePin: 37, encoderPinA: 23, encoderPinB: 22, limPos: 100, limNeg: 100, stepDeg: 21.86024888, limitAdj: j4LimitAdj });
       this.motors.j5 = new Motor({ stepper: 5, id: 'j5', board, stepPin: 10, dirPin: 11, limitPin: 31, enablePin: 38, encoderPinA: 24, encoderPinB: 25, limPos: 155, limNeg: 155, stepDeg: 22.22222222 });
 
       // Subscribe to events for all motors
@@ -141,6 +148,7 @@ export class Robot extends EventEmitter   {
    * writeConfig
    */
   writeConfig() {
+    logger('Writing config to file', this.config);
     try {
       // Get filename
       const filename = path.resolve('config.json');
@@ -150,6 +158,50 @@ export class Robot extends EventEmitter   {
       console.error(err);
     }
   }
+
+  /** ------------------------------
+   * updateConfig
+   *
+   * By default this will NOT save to the file it will only update in memory
+   * Note: a call to writeConfig() at any time will save everything that has been updated to the file
+   */
+  updateConfig(key, value, save = false) {
+
+    logger(`updating config ${key} to ${value}`);
+
+    // Special check ( dont let user set a config param to null !! )
+    if( value == null ){
+      logger(`Unable to set ${key} to ${value} as its null`);
+      return;
+    }
+
+    // Example key = "j0.limitAdj"
+    if( key.includes('.') ){
+      const [joint, param] = key.split('.');
+
+      // Update the config
+      this.config[joint][param] = value;
+
+      // Update the motor
+      this.motors[joint][param] = value;
+
+      // Special case for limitAdj
+      if(param === 'limitAdj'){
+        logger('Updating limitAdj so we need to also update zero step');
+        this.motors[joint].updateZeroStep();
+      }
+    } else {
+      this.config[key] = value;
+    }
+
+    // Now write the config out
+    if( save ) this.writeConfig();
+
+    logger(`updated config`, this.config)
+
+    this.emit("meta");
+  }
+
 
   /** ------------------------------
    * get state
@@ -188,6 +240,7 @@ export class Robot extends EventEmitter   {
       home: this.home,
       homing: this.homing,
       moving: this.moving,
+      config: this.config,
       motors
     }
   }

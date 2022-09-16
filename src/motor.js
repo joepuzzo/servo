@@ -302,13 +302,20 @@ export class Motor extends EventEmitter   {
     this.emit('resetErrors');
   }
 
-   /* ------------------------------ */
-   zero(){
+  /* ------------------------------ */
+  zero(){
     logger(`zero ${this.id}`);
     this.board.io.accelStepperZero(this.stepper);
     this.board.io.encoderResetToZero(this.stepper, true);
     this.stepPosition = 0;
     this.emit('enabled');
+  }
+
+
+  /* ------------------------------ */
+  updateZeroStep(){
+    // steps from 0 --- to ---> axis zero ( 0 is where limit switch is )
+    this.zeroStep = this.limitDir === FORWARDS ? ( this.limPos + this.limitAdj )* this.stepDeg * -1 : ( this.limNeg + this.limitAdj ) * this.stepDeg; 
   }
   
 

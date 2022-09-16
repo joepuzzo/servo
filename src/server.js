@@ -110,6 +110,16 @@ export const startServer = (config) => {
     robot.robotCenter();
   });
 
+	socket.on('robotUpdateConfig', (key, value) => {
+    logger(`controller says robotUpdateConfig`);
+    robot.updateConfig(key, value);
+  });
+
+	socket.on('robotWriteConfig', () => {
+    logger(`controller says robotWriteConfig`);
+    robot.writeConfig();
+  });
+ 
 	socket.on('robotEnable', () => {
     logger(`controller says robotEnable`);
     robot.robotEnable();
