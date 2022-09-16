@@ -135,7 +135,7 @@ export class Motor extends EventEmitter   {
   }
 
   /* ------------------------------ */
-  goHome(){
+  goHome(cb){
 
     // Cant home if we are already home
     if(this.home){
@@ -187,7 +187,14 @@ export class Motor extends EventEmitter   {
       if(!this.home){
         this.error = 'NOHOME';
         this.emit('nohome', this.id);
+      } 
+
+      // If we are home and have callback execute it
+      if(this.home && cb) {
+        logger(`motor ${this.id} is home and is going to execute a homing callback that was passed`)
+        setTimeout(cb, 500);
       }
+
     });
 
   }

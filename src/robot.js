@@ -335,7 +335,8 @@ export class Robot extends EventEmitter   {
       this.splitHoming = false;
 
       // Ok now send last motor to home!
-      this.motors.j4.goHome();
+      // note we pass callback to make it go to center after it homes ;) 
+      this.motors.j4.goHome(() => this.motors.j4.center() );
     }
 
     // Anytime this gets called its from a robot move so we are no longer home 
