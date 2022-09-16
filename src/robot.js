@@ -281,10 +281,18 @@ export class Robot extends EventEmitter   {
           // Now go to center
           setTimeout(()=>{
             this.robotCenter();
-          }, [500])
+          }, 500)
         }
-
       }
+    }
+
+    // If we were splitHoming and all motors accept j4 are home send everything accept j4 to center
+    if( this.splitHoming && Object.values(this.motors).every( (motor, i) => i != 4 ? motor.home : true )){
+      setTimeout(()=>{
+        Object.values(this.motors).forEach((motor, i) => {
+          if( i != 4 ) motor.center();
+        });   
+      },500)
     }
 
     this.emit('meta');
@@ -317,6 +325,17 @@ export class Robot extends EventEmitter   {
         logger(`all motors have centered for calibration!`);
         this.calibrating = false;
       }
+    }
+
+    // If we are performing a split home check if all motors are done moving and home the last motors
+    if(this.splitHoming){
+      logger(`all motors have centered for split home, time to home the rest of the motors!`);
+
+      // We set this to false so when the last motor homes it runs normal homing finish sequence
+      this.splitHoming = false;
+
+      // Ok now send last motor to home!
+      this.motors.j4.goHome();
     }
 
     // Anytime this gets called its from a robot move so we are no longer home 
@@ -362,6 +381,22 @@ export class Robot extends EventEmitter   {
     this.robotHome();
   }
 
+  robotSplitHome(){
+    logger(`split home robot`);
+
+    // Update our state
+    this.homing = true;
+    this.splitHoming = true;
+
+    // Home some of the motors motors
+    Object.values(this.motors).forEach((motor, i) => {
+      // Because end effector is large we home j4 later
+      if( i != 4 ){
+        motor.goHome();
+      }
+    });     
+  }
+
   robotStop(){
     logger(`stop robot`);
 
@@ -392,7 +427,7 @@ export class Robot extends EventEmitter   {
     // We are moving whole robot
     this.moving = true;
 
-    // Freeze all motors ( stops but does not disable )
+    // Centers all motors
     Object.values(this.motors).forEach(motor => {
       motor.center();
     });     
