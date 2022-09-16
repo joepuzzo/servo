@@ -4,6 +4,10 @@ import { Motor } from './motor.js';
 import five from "johnny-five";
 import { mockBoard } from "./mockboard.js";
 
+// For reading and writing to config
+import path from 'path';
+import fs from 'fs';
+
 // For debugging
 import { Debug } from './debug.js';
 const logger = Debug('servo:robot' + '\t');
