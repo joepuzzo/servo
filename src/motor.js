@@ -107,7 +107,6 @@ export class Motor extends EventEmitter   {
         logger(`Error: limit hit for motor ${this.id}`);
         this.error = 'LIMIT';
         this.homing = false;
-        this.home = true;
         this.enabled = false;
         this.moving = false;
 
