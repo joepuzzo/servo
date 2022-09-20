@@ -99,7 +99,7 @@ export class Robot extends EventEmitter   {
      // Create Gripper
      this.gripper = new five.Servo({
       pin: 10,
-      startAt: 15
+      startAt: 20
      });
 
      // Report all encoder updates
@@ -546,6 +546,9 @@ export class Robot extends EventEmitter   {
   gripperSetPosition(pos, speed = 500){
     logger(`set position for gripper to ${pos}, at speed ${speed}`);
     this.gripper.to(pos,speed);
+    setTimeout(()=>{
+        this.emit("moved");
+    }, 1000)
   }
 
 
