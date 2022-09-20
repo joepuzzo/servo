@@ -55,6 +55,11 @@ export const startServer = (config) => {
     logger("controller says hello");
   });
 
+  socket.on('gripperSetPos', (pos, speed) => {
+    logger(`controller says gripperSetPos to ${pos} at speed ${speed}`);
+    robot.gripperSetPosition(pos, speed);
+  });
+
   socket.on('motorSetPos', (id, pos, speed) => {
     logger(`controller says motorSetPos to ${pos} at speed ${speed} for motor ${id}`);
     robot.motorSetPosition(id, pos, speed);

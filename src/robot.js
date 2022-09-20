@@ -96,6 +96,12 @@ export class Robot extends EventEmitter   {
         motor.on('resetErrors', () => this.robotState() );
       });
 
+     // Create Gripper
+     this.gripper = new five.Servo({
+      pin: 13,
+      startAt: 15
+     });
+
      // Report all encoder updates
      setInterval(()=>{
 
@@ -533,6 +539,13 @@ export class Robot extends EventEmitter   {
   motorZero(id){
     logger(`zero motor ${id}`);
     this.motors[id].zero();
+  }
+
+  /* -------------------- Gripper Actions -------------------- */
+
+  gripperSetPosition(pos, speed = 500){
+    logger(`set position for gripper to ${pos}, at speed ${speed}`);
+    this.gripper.to(pos,speed);
   }
 
 
