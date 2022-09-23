@@ -455,7 +455,8 @@ export class Robot extends EventEmitter   {
     this.emit("meta");
   }
 
-  robotSetAngles(angles, speed){
+  // TODO REMOVE this old implimentation
+  robotSetAnglesOld(angles, speed){
     logger(`robotSetAngles at speed ${speed} angles:`, angles);
 
     // We are moving to a new location
@@ -500,6 +501,91 @@ export class Robot extends EventEmitter   {
       // TODO will be better to use encoder pos instead of the step one
 			const thisDistance = goal - motor.stepPosition;
 	    const thisSpeed = Math.abs(thisDistance) / longestTime;
+     
+      // Now go! ( make sure we pass degrees and not steps to this func )
+      motor.setPosition(angles[i], thisSpeed);
+    })
+
+    this.emit("meta");
+  }
+
+  robotSetAngles(angles, speed){
+    logger(`robotSetAngles at speed ${speed} angles:`, angles);
+
+    // We are moving to a new location
+    this.moving = true;
+
+    // TODO this does not currently work so I wrote my own for now
+    // Use multi stepper command to command all motors
+    //this.board.io.multiStepperTo(0, [2000, 2000, 2000, 2000, 2000, 2000], () => {
+      // End movement of all steppers
+    //});
+     
+    // Step1: First find the stepper that will take the longest time
+    let longestTime = 0;
+    let longestMotor = this.motors.j0;
+    let results = [];
+		Object.values(this.motors).forEach((motor, i) => {
+
+      // We want to determine the speed ( dont allow user to go over motor max speed )
+      const maxSpeed = speed && ( speed <= motor.maxSpeed ) ? speed : motor.maxSpeed;
+
+			// convert pos to steps 
+    	const goal = (motor.stepDeg * angles[i] )+ motor.zeroStep;
+      
+      // TODO will be better to use encoder pos instead of the step one
+			const D = Math.abs(goal - motor.stepPosition);
+
+      // New stuff
+      // 
+      // Below we have distances A, B, and C
+      // where A = C and are the ramp up and down times and B is the max speed time
+      //
+      // Total Distance = D
+      //
+      //  A         B         C
+      //
+      //      |          | 
+      //      ____________
+      //     /|          |\
+      // ___/ |          | \___
+      //
+      //  T1       T2        T1
+      //
+      // Our goal is to calculate T2 and T1 
+      //
+      let B = D - ( 2 * motor.maxAccel );
+      // If be is less than zero set to zero
+      if( B < 0 ) B = 0;
+
+      // Get distance for A and C 
+      const A = ( D - B ) / 2;
+
+      // Get times for T1 and T2
+      const T1 = B / maxSpeed;
+      const T2 = A / motor.maxAccel;
+
+      // Set total time
+      thisTime = T1 + T2 + T1;
+
+      // Add to results
+      results.push({ A, B, D, T1, T2 })
+
+      // Update longest if its longer
+      if(thisTime > longestTime){
+      	longestTime = thisTime;
+        longestMotor = motor; 
+    	}
+    }); 
+
+    logger(`Longest time is ${longestTime} for motor ${longestMotor.id}`);
+
+		// Step2: Move via speed for each based on time
+		Object.values(this.motors).forEach((motor, i) => {
+
+      // Scale down the speed based on longest time
+      const { D } = results[i];
+	    const thisSpeed = D / longestTime;
      
       // Now go! ( make sure we pass degrees and not steps to this func )
       motor.setPosition(angles[i], thisSpeed);
