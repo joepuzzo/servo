@@ -17,7 +17,7 @@ const BACKWARDS = -1;
 export class Motor extends EventEmitter   {
 
   /* ------------------------------ */
-  constructor({ id, stepper, board, stepPin, dirPin, limitPin, encoderPinA, encoderPinB, limPos, limNeg, stepDeg, enablePin, limitDir = FORWARDS, invertEnable = true, limitAdj = 0, maxSpeed }) {
+  constructor({ id, stepper, board, stepPin, dirPin, limitPin, encoderPinA, encoderPinB, limPos, limNeg, stepDeg, enablePin, limitDir = FORWARDS, invertEnable = true, limitAdj = 0, maxSpeed, maxAccel }) {
 
     logger(`creating motor ${id}`);
 
@@ -52,6 +52,7 @@ export class Motor extends EventEmitter   {
     this.invertEnable = invertEnable;           // If we want to invert the enable pin
     this.enablePin = enablePin                  // what pin is used to enable this
     this.maxSpeed = maxSpeed ?? 1500;           // the max speed for this motor in steps/s
+    this.maxAccel = maxAccel ?? 900;           // the max acceleration for this motor in steps/s
     this.zeroStep = limitDir === FORWARDS ? ( this.limPos + limitAdj )* stepDeg * -1 : ( this.limNeg + limitAdj ) * stepDeg;      // steps from 0 --- to ---> axis zero ( 0 is where limit switch is ) 
   }
 
@@ -246,7 +247,7 @@ export class Motor extends EventEmitter   {
 
     // set speed before movement
     this.board.io.accelStepperSpeed(this.stepper, speed);
-    this.board.io.accelStepperAcceleration(this.stepper, 1000)
+    this.board.io.accelStepperAcceleration(this.stepper, this.maxAccel)
 
     // convert pos to steps 
     let pos = this.stepDeg * position;
