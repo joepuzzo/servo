@@ -228,7 +228,7 @@ export class Motor extends EventEmitter   {
 
     // Safety check ( dont allow user to set pos if motor was never homed )
     if( !this.homed ){
-      logger(`ERROR: motor ${this.id} set position to ${position}º cannot be completed as motor has never been homed!!`);
+      logger(`ERROR: motor ${this.id} set position to ${position}º at ${speed} cannot be completed as motor has never been homed!!`);
       this.error = 'NEVER_HOMED';
       this.emit('motorError');
       return;

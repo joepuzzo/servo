@@ -566,7 +566,7 @@ export class Robot extends EventEmitter   {
       const T2 = A / motor.maxAccel;
 
       // Set total time
-      thisTime = T1 + T2 + T1;
+      const thisTime = T1 + T2 + T1;
 
       // Add to results
       results.push({ A, B, D, T1, T2 })
