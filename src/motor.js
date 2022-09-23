@@ -240,12 +240,13 @@ export class Motor extends EventEmitter   {
     // NOTE: timeout is because switch might get triggered again after it first leaves
     setTimeout(()=>{
       this.home = false;
-    }, 500)
+    }, 1500)
 
     logger(`motor ${this.id} set position to ${position}º speed ${speed} steps/s`);
 
     // set speed before movement
     this.board.io.accelStepperSpeed(this.stepper, speed);
+    this.board.io.accelStepperAcceleration(this.stepper, 1000)
 
     // convert pos to steps 
     let pos = this.stepDeg * position;
