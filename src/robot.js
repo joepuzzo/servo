@@ -562,9 +562,9 @@ export class Robot extends EventEmitter   {
       const A = ( D - B ) / 2;
 
       // Get times for T1 and T2
-      const T1 = B / maxSpeed;
-      // Get T2 from a double integration using acceleration and distance. See: https://math.stackexchange.com/questions/504494/finding-time-with-given-distance-and-acceleration-help-needed
-      const T2 = Math.sqrt((2*A)/motor.maxAccel);
+      const T2 = B / maxSpeed;
+      // Get T1 from a double integration using acceleration and distance. See: https://math.stackexchange.com/questions/504494/finding-time-with-given-distance-and-acceleration-help-needed
+      const T1 = Math.sqrt((2*A)/motor.maxAccel);
 
       // Set total time
       const thisTime = T1 + T2 + T1;
