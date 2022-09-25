@@ -554,16 +554,19 @@ export class Robot extends EventEmitter   {
       //
       // Our goal is to calculate T2 and T1 
       //
-      let B = D - ( 2 * motor.maxAccel );
-      // If be is less than zero set to zero
-      if( B < 0 ) B = 0;
 
-      // Get distance for A and C 
-      const A = ( D - B ) / 2;
 
-      // Get times for T1 and T2
-      const T1 = B / maxSpeed;
-      const T2 = A / motor.maxAccel;
+      // T1 is the time to get up to maxSpeed given at an acceleration.
+      // T1 = (VFinal - VInitial ) / Acceleration
+      const T1 = motorSpeed/motor.maxAccel;
+
+      // Using displacement equation s=1/2 at^2 to get the distane traveled during T1
+      const A = .5 * motor.maxAccel * (T1 ** 2);
+      // B =  total distance - distance traveled to acclerate/decellerate
+      const B = D - (2 * A);
+      
+      // Time to travel distance B (while at max speed) is B/maxSpeed
+      const T2 = B/maxSpeed
 
       // Set total time
       const thisTime = T1 + T2 + T1;
