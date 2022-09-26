@@ -216,7 +216,7 @@ export class Motor extends EventEmitter   {
   }
 
   /* ------------------------------ */
-  setPosition( position, speed = this.maxSpeed ){
+  setPosition( position, speed = this.maxSpeed, acceleration = this.maxAccel){
 
     // Safety check ( don't allow set pos to an angle outside the limits )
     if( position > this.limPos || position < -this.limNeg ){
@@ -247,7 +247,7 @@ export class Motor extends EventEmitter   {
 
     // set speed before movement
     this.board.io.accelStepperSpeed(this.stepper, speed);
-    this.board.io.accelStepperAcceleration(this.stepper, this.maxAccel)
+    this.board.io.accelStepperAcceleration(this.stepper, acceleration)
 
     // convert pos to steps 
     let pos = this.stepDeg * position;
@@ -269,6 +269,9 @@ export class Motor extends EventEmitter   {
       this.moving = false;
 			// let others know our movement is complete
       this.emit('moved', this.id);
+      // TODO: May not need this?
+      // reset accel to max accel
+      this.board.io.accelStepperAcceleration(this.stepper, this.maxAccel);
     });
   }
 
