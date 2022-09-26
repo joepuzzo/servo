@@ -558,7 +558,7 @@ export class Robot extends EventEmitter   {
 
       // T1 is the time to get up to maxSpeed given at an acceleration.
       // T1 = (VFinal - VInitial ) / Acceleration
-      const T1 = motorSpeed/motor.maxAccel;
+      const T1 = motor.maxSpeed/motor.maxAccel;
 
       // Using displacement equation s=1/2 at^2 to get the distane traveled during T1
       const A = .5 * motor.maxAccel * (T1 ** 2);
