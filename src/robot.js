@@ -75,8 +75,8 @@ export class Robot extends EventEmitter   {
       const board = this.board;
 
       // Create Motors
-      this.motors.j0 = new Motor({ stepper: 0, id: 'j0', board, stepPin: 0, dirPin: 1, limitPin: 26, enablePin: 33, encoderPinA: 14, encoderPinB: 15, limPos: 170, limNeg: 170, stepDeg: 44.44444444, limitAdj: j0LimitAdj, maxSpeed: 1500 });
-      this.motors.j1 = new Motor({ stepper: 1, id: 'j1', board, stepPin: 2, dirPin: 3, limitPin: 27, enablePin: 34, encoderPinA: 17, encoderPinB: 16, limPos: 42, limNeg: 90, stepDeg: 55.55555556, maxSpeed: 1500, limitAdj: j1LimitAdj });
+      this.motors.j0 = new Motor({ stepper: 0, id: 'j0', board, stepPin: 0, dirPin: 1, limitPin: 26, enablePin: 33, encoderPinA: 14, encoderPinB: 15, limPos: 170, limNeg: 170, stepDeg: 44.44444444, limitAdj: j0LimitAdj });
+      this.motors.j1 = new Motor({ stepper: 1, id: 'j1', board, stepPin: 2, dirPin: 3, limitPin: 27, enablePin: 34, encoderPinA: 17, encoderPinB: 16, limPos: 42, limNeg: 90, stepDeg: 55.55555556, limitAdj: j1LimitAdj });
       this.motors.j2 = new Motor({ stepper: 2, id: 'j2', board, stepPin: 4, dirPin: 5, limitPin: 28, enablePin: 35, encoderPinA: 19, encoderPinB: 18, limPos: 20, limNeg: 145, stepDeg: 55.55555556, limitDir: BACKWARDS, limitAdj: j2LimitAdj });
       this.motors.j3 = new Motor({ stepper: 3, id: 'j3', board, stepPin: 6, dirPin: 7, limitPin: 29, enablePin: 36, encoderPinA: 20, encoderPinB: 21, limPos: 165, limNeg: 165, stepDeg: 42.72664356, invertEnable: false, limitDir: BACKWARDS });
       this.motors.j4 = new Motor({ stepper: 4, id: 'j4', board, stepPin: 8, dirPin: 9, limitPin: 30, enablePin: 37, encoderPinA: 23, encoderPinB: 22, limPos: 100, limNeg: 100, stepDeg: 21.86024888, limitAdj: j4LimitAdj });
@@ -588,7 +588,8 @@ export class Robot extends EventEmitter   {
 
       // Scale down the speed based on longest time
       const { D } = results[i];
-	    const thisSpeed = D / longestTime;
+
+      const thisSpeed = D / longestTime;
      
       // Now go! ( make sure we pass degrees and not steps to this func )
       motor.setPosition(angles[i], thisSpeed);
