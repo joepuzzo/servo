@@ -587,12 +587,17 @@ export class Robot extends EventEmitter   {
 		Object.values(this.motors).forEach((motor, i) => {
 
       // Scale down the speed based on longest time
-      const { D } = results[i];
+      const { B } = results[i];
 
-      const thisSpeed = D / longestTime;
+      // The speed to set _this_ motor will be the speed such that
+      // Given this motor's acceleration and longestTime.
+      // What speed should this motor move such that it will accerate, move and decellearte in longest time
+      // longestTime = 2(speed / motorAccleration) + (B / speed)
+      // Solve for speed gives us: (thanks https://www.wolframalpha.com/widgets/view.jsp?id=4be4308d0f9d17d1da68eea39de9b2ce)
+      const speed = .25 * (longestTime*motor.maxAccel - (Math.sqrt(motor.maxAccel*(longestTime**2 * motor.maxAccel - (8*B)))));
      
       // Now go! ( make sure we pass degrees and not steps to this func )
-      motor.setPosition(angles[i], thisSpeed);
+      motor.setPosition(angles[i], speed);
     })
 
     this.emit("meta");
