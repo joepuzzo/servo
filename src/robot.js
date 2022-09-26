@@ -601,9 +601,13 @@ export class Robot extends EventEmitter   {
       // What acceleration is required to reach travelSpeed in (longestTime - longestMotorTimeAtSpeed)/2 seconds?
       const timeForAcceleration = (longestTime - longestMotorTimeAtSpeed) /2;
       const acceleration = travelSpeed / timeForAcceleration;
-     
-      // Now go! ( make sure we pass degrees and not steps to this func )
-      motor.setPosition(angles[i], travelSpeed, acceleration);
+      
+      if( travelSpeed < 2500 && acceleration < 2000 ){
+        // Now go! ( make sure we pass degrees and not steps to this func )
+        motor.setPosition(angles[i], travelSpeed, acceleration);
+      } else {
+        logger(`ERROR!! unable to set pos for motor ${motor.id} with acceleration ${acceleration} and speed ${travelSpeed} as one of them is too big!`)
+      }
     })
 
     this.emit("meta");

@@ -51,7 +51,7 @@ export class Motor extends EventEmitter   {
     this.stepPosition = 0;                      // step position
     this.invertEnable = invertEnable;           // If we want to invert the enable pin
     this.enablePin = enablePin                  // what pin is used to enable this
-    this.maxSpeed = maxSpeed ?? 1800;           // the max speed for this motor in steps/s
+    this.maxSpeed = maxSpeed ?? 2200;           // the max speed for this motor in steps/s
     this.maxAccel = maxAccel ?? 1500;           // the max acceleration for this motor in steps/s
     this.zeroStep = limitDir === FORWARDS ? ( this.limPos + limitAdj )* stepDeg * -1 : ( this.limNeg + limitAdj ) * stepDeg;      // steps from 0 --- to ---> axis zero ( 0 is where limit switch is ) 
   }
@@ -243,7 +243,7 @@ export class Motor extends EventEmitter   {
       this.home = false;
     }, 1500)
 
-    logger(`motor ${this.id} set position to ${position}º speed ${speed} steps/s`);
+    logger(`motor ${this.id} set position to ${position}º speed ${speed} steps/s with accel ${acceleration}`);
 
     // set speed before movement
     this.board.io.accelStepperSpeed(this.stepper, speed);
