@@ -525,6 +525,7 @@ export class Robot extends EventEmitter   {
     let longestTime = 0;
     let longestMotor = this.motors.j0;
     let longestMotorTimeAtSpeed = 1;
+    let longestRatio = 0;
   
     let results = [];
 		Object.values(this.motors).forEach((motor, i) => {
@@ -560,13 +561,14 @@ export class Robot extends EventEmitter   {
 
       // T1 is the time to get up to maxSpeed given at an acceleration.
       // T1 = (VFinal - VInitial ) / Acceleration
-      const T1 = motor.maxSpeed/motor.maxAccel;
+      const T1 = maxSpeed/motor.maxAccel;
 
       // Using displacement equation s=1/2 at^2 to get the distane traveled during T1
       const A = .5 * motor.maxAccel * (T1 ** 2);
       // B =  total distance - distance traveled to acclerate/decellerate
+      //const B = Math.abs(D - (2 * A)); 
       const B = D - (2 * A);
-      
+
       // Time to travel distance B (while at max speed) is B/maxSpeed
       const T2 = B/maxSpeed
 
@@ -581,10 +583,12 @@ export class Robot extends EventEmitter   {
       	longestTime = thisTime;
         longestMotor = motor;
         longestMotorTimeAtSpeed =  T2;
+        longestRatio = B / D;
     	}
     }); 
 
     logger(`Longest time is ${longestTime} for motor ${longestMotor.id}`);
+    logger(`Results`, results);
 
 		// Step2: Move via speed for each based on time
 		Object.values(this.motors).forEach((motor, i) => {
@@ -595,7 +599,12 @@ export class Robot extends EventEmitter   {
       // We want this motor to spend longestMotorTimeAtSpeed at speed
       // It will travel D * longestMotorTimeAtSpeed/longestTime total distance at speed
       // How fast will it need to go to cover this distance?
-      const travelSpeed = Math.abs((D * longestMotorTimeAtSpeed/longestTime) / longestMotorTimeAtSpeed);
+
+      // MATT BELOW WAS OLD RATIO CALC 
+  		//const ratio = Math.abs(longestMotorTimeAtSpeed / longestTime);
+      const ratio = longestRatio;
+    	const distaceAtSpeed = D * ratio;
+    	const travelSpeed = distaceAtSpeed / longestMotorTimeAtSpeed;
 
       // This leaves (longestTime - longestMotorTimeAtSpeed) many seconds for accel and decel
       // What acceleration is required to reach travelSpeed in (longestTime - longestMotorTimeAtSpeed)/2 seconds?
