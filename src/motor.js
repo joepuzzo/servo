@@ -154,26 +154,50 @@ export class Motor extends EventEmitter   {
 
     // Define stop
     this.limit.once('close',()=>{
-      logger(`limit hit, motor ${this.id} is home!`);
 
-			// First we stop the motor
+      logger(`limit hit, motor ${this.id} found switch!`);
+
+			// Stop the motor
       this.board.io.accelStepperStop(this.stepper);
 
-			// Then we set the stepper location to zero
-      this.board.io.accelStepperZero(this.stepper);
+      // Now we move off of the switch
+      this.board.io.accelStepperStep(this.stepper, 500 * -this.limitDir,()=>{
 
-			// Next we reset the encoder pos to zero
-      this.board.io.encoderResetToZero(this.stepper, true);
+        logger(`motor ${this.id} moving off of switch!`);
 
-			// Finally we update our internal parameters
-    	this.stepPosition = 0;
-      this.homing = false;
-      this.home = true;
-      this.homed = true;
-      this.moving = false;
+        // We are off switch again so set up second close ( for when we are actually home )
+        this.limit.once('close', () => {
 
-			// Let others know we are home
-      this.emit('home', this.id);
+          logger(`limit hit, motor ${this.id} found home!`);
+
+          // First we stop the motor
+          this.board.io.accelStepperStop(this.stepper);
+          // Then we set the stepper location to zero
+          this.board.io.accelStepperZero(this.stepper);
+          // Next we reset the encoder pos to zero
+          this.board.io.encoderResetToZero(this.stepper, true);
+          // Finally we update our internal parameters
+          this.stepPosition = 0;
+          this.homing = false;
+          this.home = true;
+          this.homed = true;
+          this.moving = false;
+          // Let others know we are home
+          this.emit('home', this.id);
+        });
+
+        // Now move back towards the switch
+        this.board.io.accelStepperStep(this.stepper, 1000 * this.limitDir,()=>{
+          logger(`motor ${this.id} moving back to switch`);
+          // If we are home and have callback execute it
+          if(this.home && cb) {
+            logger(`motor ${this.id} is home and is going to execute a homing callback that was passed`)
+            setTimeout(cb, 500);
+          }
+        });
+
+      });
+
     })
 
     // Slow for homing
@@ -181,19 +205,13 @@ export class Motor extends EventEmitter   {
 
     // We go back until we find switch
     this.board.io.accelStepperStep(this.stepper, 20000 * this.limitDir,()=>{
-      logger(`motor ${this.id} homing movement complete!`);
+      logger(`motor ${this.id} switch movement complete!`);
 
       // If we are here we never found home :(
       if(!this.home){
         this.error = 'NOHOME';
         this.emit('nohome', this.id);
       } 
-
-      // If we are home and have callback execute it
-      if(this.home && cb) {
-        logger(`motor ${this.id} is home and is going to execute a homing callback that was passed`)
-        setTimeout(cb, 500);
-      }
 
     });
 
