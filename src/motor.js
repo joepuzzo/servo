@@ -44,6 +44,7 @@ export class Motor extends EventEmitter   {
     this.robotStopped = false;                  // the motor might stop things but the robot might also have stop set
     this.homing = false;                        // if motor is process of homing
     this.home = false;                          // if the motor is currently home
+    this.found = false;                         // if the motor has found switch
     this.homed = false;                         // if the motor has been homed
     this.ready = false;                         // if motor is ready
     this.moving = false;                        // if motor is in motion
@@ -160,10 +161,20 @@ export class Motor extends EventEmitter   {
 			// Stop the motor
       this.board.io.accelStepperStop(this.stepper);
 
+      // We found the switch
+      this.found = true;
+
+      setTimeout(() => {
+
+      logger(`motor ${this.id} moving off of switch!`);
+
+      // Slower for moveoff
+      this.board.io.accelStepperSpeed(this.stepper, 500);
+
       // Now we move off of the switch
       this.board.io.accelStepperStep(this.stepper, 500 * -this.limitDir,()=>{
 
-        logger(`motor ${this.id} moving off of switch!`);
+        logger(`motor ${this.id} moved off of switch!`);
 
         // We are off switch again so set up second close ( for when we are actually home )
         this.limit.once('close', () => {
@@ -186,6 +197,9 @@ export class Motor extends EventEmitter   {
           this.emit('home', this.id);
         });
 
+        // Very slow for secod moveback
+        this.board.io.accelStepperSpeed(this.stepper, 100);
+
         // Now move back towards the switch
         this.board.io.accelStepperStep(this.stepper, 1000 * this.limitDir,()=>{
           logger(`motor ${this.id} moving back to switch`);
@@ -198,6 +212,8 @@ export class Motor extends EventEmitter   {
 
       });
 
+      }, 2000);
+
     })
 
     // Slow for homing
@@ -208,8 +224,8 @@ export class Motor extends EventEmitter   {
       logger(`motor ${this.id} switch movement complete!`);
 
       // If we are here we never found home :(
-      if(!this.home){
-        this.error = 'NOHOME';
+      if(!this.found){
+        this.error = 'NOSWITCH';
         this.emit('nohome', this.id);
       } 
 

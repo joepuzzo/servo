@@ -340,9 +340,10 @@ export class Robot extends EventEmitter   {
       // We set this to false so when the last motor homes it runs normal homing finish sequence
       this.splitHoming = false;
 
-      // Ok now send last motor to home!
-      // note we pass callback to make it go to center after it homes ;) 
+      // Ok now send last motors to home!
+      // note we pass callback to them go to center after they home ;) 
       this.motors.j4.goHome(() => this.motors.j4.center() );
+      this.motors.j5.goHome(() => this.motors.j5.center() );
     }
 
     // Anytime this gets called its from a robot move so we are no longer home 
