@@ -16,7 +16,7 @@ DEBUG='servo:.*' node index.js -p 3000
  npm i firmata-io@npm:@joepuzzo/firmata-io
 ```
 
-4. You also need to change this `_minPulseWidth = 1;` to `_minPulseWidth = 4;` in the `ConfigurableFirmata-2.10.1`s  `AccelStepper.cpp` file 
+4. You also need to change this `_minPulseWidth = 1;` to `_minPulseWidth = 8;` in the `ConfigurableFirmata-2.10.1`s  `AccelStepper.cpp` file 
 
 5. You need to add this to the Boards.h in the `ConfigurableFirmata-2.10.1` src/utility directory
 
